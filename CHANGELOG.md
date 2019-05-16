@@ -2,6 +2,12 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
+
+### v0.10.0
+- Update to JuMP v0.19/MathOptInterface
+
+### v0.9.8
 - Added a test network with dangling buses, case5_db.m
 - Fixed voltage bound persistence bug in acr formulation (#497)
 
@@ -24,6 +30,8 @@ PowerModels.jl Change Log
 - Added generator on/off constraints
 - Added opf model with unit commitment (#475)
 - Fixed multiconductor support for ACR formulation
+- Removed support for Julia versions < 1.0
+- Update syntax to be compatible with JuMP v0.19 / MathOptInterface
 
 ### v0.9.4
 - Added all error messages to memento log

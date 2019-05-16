@@ -1,6 +1,6 @@
 # Tests of data checking and transformation code
 
-TESTLOG =  Memento.getlogger(PowerModels)
+TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test data summary" begin
 
@@ -208,6 +208,14 @@ end
         @test length(cc_ordered) == 2
         @test length(cc_ordered[1]) == 3
         @test length(cc_ordered[2]) == 3
+
+        # arbitrary edge types test
+        data["trans"] = Dict{String,Any}()
+        data["trans"]["1"] = deepcopy(data["branch"]["6"])
+        delete!(data["branch"], "6")
+
+        cc2 = PowerModels.connected_components(data; edges=["branch", "trans"])
+        @test cc2 == cc
     end
 
     @testset "connecected components with propagate topology status" begin
@@ -395,7 +403,7 @@ end
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model(pm, Ipopt.IpoptSolver(print_level=0))
+        result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5907; atol = 1e0)
@@ -485,7 +493,7 @@ end
         end
     end
 
-end 
+end
 
 
 
