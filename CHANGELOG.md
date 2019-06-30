@@ -2,7 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Add check_status to standard data reading checks (#547)
+
+### v0.12.1
+- Fixed a bug in add_setpoint! in the multiconductor case
 
 ### v0.12.0
 - Significant updates to function naming details in #538 (#268,#454,#499,#533) (breaking)
