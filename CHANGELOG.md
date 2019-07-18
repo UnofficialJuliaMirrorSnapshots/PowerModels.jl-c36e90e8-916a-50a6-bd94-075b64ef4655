@@ -2,9 +2,15 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Add pwl objective variable functions
-- Add check_status to standard data reading checks (#547)
+- Fixed `va` default start point
+
+### v0.12.2
+- Added function for building pwl objective variables and constraints
+- Added check_status to standard data reading checks (#547)
+- Added storage on/off constraints (#552)
+- Added an alternative storage complementary constraint that uses MIP instead of NLP (#552)
 - Fixed a bug in branch status reporting (#553)
+- Fixed a bug in `AbstractBFForm` version of `constraint_voltage_angle_difference` (#557)
 
 ### v0.12.1
 - Fixed a bug in add_setpoint! in the multiconductor case
