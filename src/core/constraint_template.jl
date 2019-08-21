@@ -172,6 +172,32 @@ function constraint_power_balance_shunt(pm::GenericPowerModel, i::Int; nw::Int=p
 end
 
 ""
+function constraint_power_balance_shunt_switch(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    if !haskey(con(pm, nw, cnd), :kcl_p)
+        con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
+    end
+    if !haskey(con(pm, nw, cnd), :kcl_q)
+        con(pm, nw, cnd)[:kcl_q] = Dict{Int,JuMP.ConstraintRef}()
+    end
+
+    bus = ref(pm, nw, :bus, i)
+    bus_arcs = ref(pm, nw, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
+    bus_arcs_sw = ref(pm, nw, :bus_arcs_sw, i)
+    bus_gens = ref(pm, nw, :bus_gens, i)
+    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_shunts = ref(pm, nw, :bus_shunts, i)
+
+    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
+
+    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
+
+    constraint_power_balance_shunt_switch(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+end
+
+""
 function constraint_power_balance_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
@@ -642,6 +668,45 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; 
 end
 
 
+### Switch Constraints ###
+"enforces static switch constraints"
+function constraint_switch_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    switch = ref(pm, nw, :switch, i)
+
+    if switch["state"] == 0
+        f_idx = (i, switch["f_bus"], switch["t_bus"])
+        constraint_switch_state_open(pm, nw, cnd, f_idx)
+    else
+        @assert switch["state"] == 1
+        constraint_switch_state_closed(pm, nw, cnd, switch["f_bus"], switch["t_bus"])
+    end
+end
+
+"enforces controlable switch constraints"
+function constraint_switch_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    switch = ref(pm, nw, :switch, i)
+
+    f_idx = (i, switch["f_bus"], switch["t_bus"])
+    vad_min = ref(pm, nw, :off_angmin, cnd)
+    vad_max = ref(pm, nw, :off_angmax, cnd)
+
+    constraint_switch_flow_on_off(pm, nw, cnd, i, f_idx)
+    constraint_switch_voltage_on_off(pm, nw, cnd, i, switch["f_bus"], switch["t_bus"], vad_min, vad_max)
+end
+
+"enforces an mva limit on the power flow over a switch"
+function constraint_switch_thermal_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    switch = ref(pm, nw, :switch, i)
+
+    if haskey(switch, "thermal_rating")
+        f_idx = (i, switch["f_bus"], switch["t_bus"])
+        constraint_switch_thermal_limit(pm, nw, cnd, f_idx, switch["thermal_rating"])
+    end
+end
+
+
+
+
 
 ### Storage Constraints ###
 
@@ -685,7 +750,7 @@ end
 function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
+    constraint_storage_loss(pm, nw, cnd, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
 end
 
 ""
@@ -728,7 +793,7 @@ function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw
     qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
     qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
 
-    constraint_storage_on_off(pm, nw, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+    constraint_storage_on_off(pm, nw, cnd, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
 end
 
 ### DC LINES ###

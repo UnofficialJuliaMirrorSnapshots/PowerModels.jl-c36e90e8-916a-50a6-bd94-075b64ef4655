@@ -2,7 +2,17 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.12.4
+- Fixed support for data without an explicit switch section
+- Fixed support for single values in add_setpoint! and add_dual!
+
+### v0.12.3
+- Add switch component (#339)
 - Added component status parameter lookup (#565)
+- Relax JuMP Model type (#582)
+- Fixed conductor semantics in storage devices (breaking)
 - Fixed status-based filtering to support fractional values (#564)
 - Fixed `va` default start point
 

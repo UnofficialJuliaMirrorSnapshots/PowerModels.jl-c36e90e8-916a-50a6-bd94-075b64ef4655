@@ -150,6 +150,39 @@ function constraint_model_current(pm::GenericPowerModel, n::Int, c::Int)
 end
 
 
+""
+function constraint_switch_state_open(pm::GenericPowerModel, n::Int, c::Int, f_idx)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+
+    JuMP.@constraint(pm.model, psw == 0.0)
+    JuMP.@constraint(pm.model, qsw == 0.0)
+end
+
+""
+function constraint_switch_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, f_idx, rating)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+
+    JuMP.@constraint(pm.model, psw^2 + qsw^2 <= rating^2)
+end
+
+""
+function constraint_switch_flow_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_idx)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+    z = var(pm, n, :z_switch, i)
+
+    psw_lb, psw_ub = InfrastructureModels.variable_domain(psw)
+    qsw_lb, qsw_ub = InfrastructureModels.variable_domain(qsw)
+
+    JuMP.@constraint(pm.model, psw <= psw_ub*z)
+    JuMP.@constraint(pm.model, psw >= psw_lb*z)
+    JuMP.@constraint(pm.model, qsw <= qsw_ub*z)
+    JuMP.@constraint(pm.model, qsw >= qsw_lb*z)
+end
+
+
 
 ""
 function constraint_storage_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, i, rating)
@@ -161,7 +194,7 @@ end
 
 ""
 function constraint_storage_current_limit(pm::GenericPowerModel, n::Int, c::Int, i, bus, rating)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
+    vm = var(pm, n, c, :vm, bus)
     ps = var(pm, n, c, :ps, i)
     qs = var(pm, n, c, :qs, i)
 
@@ -208,10 +241,10 @@ function constraint_storage_complementarity_mi(pm::GenericPowerModel, n::Int, i,
 end
 
 ""
-function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, standby_loss)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+function constraint_storage_loss(pm::GenericPowerModel, n::Int, c::Int, i, bus, r, x, standby_loss)
+    vm = var(pm, n, c, :vm, bus)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
@@ -219,10 +252,10 @@ function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, st
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+function constraint_storage_on_off(pm::GenericPowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
