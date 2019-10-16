@@ -2,6 +2,11 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.13.0
+- Added SOC formulation of the storage model
+- Added support for optional line flow constraints (#576)
 - Simplified PowerModel types (#192) (breaking)
 - Improved multi-conductor support in the storage model (#572) (breaking)
 - Renamed model_constructor to model_type (#192) (breaking)
@@ -10,9 +15,6 @@ PowerModels.jl Change Log
 - Fixed naming branch indicator variable (#551) (breaking)
 - Made baseMVA not a global key in multinetwork models (breaking)
 - Fixed bug in bus_storage_lookup (#598)
-
-### Staged
-- nothing
 
 ### v0.12.5
 - Update to InfrastructureModels v0.3 and JuMP v0.20
